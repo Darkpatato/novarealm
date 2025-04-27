@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Envoyer un Message Discord</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #2c2f33;
+      color: #fff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    .card {
+      background-color: #23272a;
+      padding: 30px;
+      border-radius: 15px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+      width: 350px;
+      text-align: center;
+      animation: fadeIn 0.6s ease;
+    }
+    @keyframes fadeIn {
+      from {opacity: 0; transform: scale(0.95);}
+      to {opacity: 1; transform: scale(1);}
+    }
+    h1 {
+      color: #7289da;
+      margin-bottom: 20px;
+    }
+    input, textarea {
+      width: 100%;
+      padding: 12px;
+      margin-top: 10px;
+      margin-bottom: 20px;
+      background-color: #2c2f33;
+      border: 1px solid #7289da;
+      border-radius: 8px;
+      color: white;
+      font-size: 15px;
+    }
+    textarea {
+      resize: none;
+      height: 100px;
+    }
+    button {
+      background-color: #7289da;
+      color: white;
+      border: none;
+      padding: 12px 20px;
+      font-size: 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      width: 100%;
+      transition: background-color 0.3s, transform 0.2s;
+    }
+    button:hover {
+      background-color: #5b6eae;
+      transform: scale(1.03);
+    }
+    .status {
+      margin-top: 15px;
+      font-size: 14px;
+    }
+    .success {
+      color: #43b581;
+    }
+    .error {
+      color: #f04747;
+    }
+  </style>
+</head>
+<body>
+
+<div class="card">
+  <h1>💬 Discord Webhook</h1>
+  <input type="text" id="username" placeholder="Nom d'utilisateur (optionnel)">
+  <textarea id="message" placeholder="Écris ton message..."></textarea>
+  <button onclick="sendMessage()">Envoyer</button>
+  <div class="status" id="status"></div>
+</div>
+
+<script>
+  const webhookURL = "https://discord.com/api/webhooks/1366051508038139934/oXa0SPzXoGGlemc0KihWc88LGohxm0KWmWvp4AdLRZaomt8t0g0b1JdZCY3AOF1p-Hns";
+
+  function sendMessage() {
+    const message = document.getElementById('message').value.trim();
+    const username = document.getElementById('username').value.trim() || "WebApp";
+    const statusDiv = document.getElementById('status');
+
+    if (!message) {
+      statusDiv.textContent = "🚫 Le message est vide !";
+      statusDiv.className = "status error";
+      return;
+    }
+
+    fetch(webhookURL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        username: username,
+        content: message
+      })
+    })
+    .then(response => {
+      if (response.ok) {
+        statusDiv.textContent = "✅ Message envoyé avec succès !";
+        statusDiv.className = "status success";
+        document.getElementById('message').value = "";
+      } else {
+        statusDiv.textContent = "🚫 Erreur lors de l'envoi du message.";
+        statusDiv.className = "status error";
+      }
+    })
+    .catch(error => {
+      console.error('Erreur:', error);
+      statusDiv.textContent = "🚫 Problème de connexion.";
+      statusDiv.className = "status error";
+    });
+  }
+</script>
+
+</body>
+</html>
