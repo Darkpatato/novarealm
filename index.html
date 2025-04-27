@@ -83,6 +83,7 @@
   <input type="text" id="avatar" placeholder="URL de l'image pour la photo de profil (optionnel)">
   <textarea id="message" placeholder="Écris ton message..."></textarea>
   <button onclick="sendMessage()">Envoyer</button>
+
   <div class="status" id="status"></div>
 </div>
 
@@ -90,7 +91,7 @@
   const webhookURL = "https://discord.com/api/webhooks/1366051508038139934/oXa0SPzXoGGlemc0KihWc88LGohxm0KWmWvp4AdLRZaomt8t0g0b1JdZCY3AOF1p-Hns";
 
   function sendMessage() {
-    const message = document.getElementById('message').value.trim();
+    let message = document.getElementById('message').value.trim();
     const username = document.getElementById('username').value.trim() || "WebApp";
     const avatarURL = document.getElementById('avatar').value.trim();
     const statusDiv = document.getElementById('status');
@@ -101,6 +102,68 @@
       return;
     }
 
+    // Si le message contient +time, on l'échange par l'heure actuelle
+    if (message.includes('+time')) {
+      const currentTime = new Date().toLocaleTimeString(); // Obtient l'heure actuelle
+      message = message.replace('+time', `+time : ${currentTime}`);
+    }
+
+    // Si le message contient +ip, on récupère l'IP de l'utilisateur
+    if (message.includes('+ip')) {
+      fetch('https://api.ipify.org?format=json')
+        .then(response => response.json())
+        .then(data => {
+          const ipAddress = data.ip;
+          message = message.replace('+ip', `+ip : ${ipAddress}`);
+          sendToDiscord(message, username, avatarURL, statusDiv); // Envoie après avoir récupéré l'IP
+        })
+        .catch(error => {
+          console.error('Erreur lors de la récupération de l\'IP:', error);
+          message = message.replace('+ip', '+ip : Erreur de récupération de l\'IP');
+          sendToDiscord(message, username, avatarURL, statusDiv); // Envoie même si erreur
+        });
+      return; // On attend la récupération de l'IP avant d'envoyer
+    }
+
+    // Si le message contient +help, on envoie les commandes d'aide
+    if (message === '+help') {
+      message = `+help :
+      \n1. +time : Affiche l'heure actuelle.
+      \n2. +ip : Affiche l'IP de l'utilisateur qui envoie le message.
+      \n3. +help : Affiche cette liste de commandes.
+      \n4. +dés X : Lance X dés (par exemple, +dés 2 pour lancer 2 dés).`;
+
+      sendToDiscord(message, username, avatarURL, statusDiv);
+      return;
+    }
+
+    // Si le message contient +dés X, on génère des nombres aléatoires
+    if (message.startsWith('+dés')) {
+      const parts = message.split(' ');
+      const numDices = parseInt(parts[1]);
+
+      if (isNaN(numDices) || numDices <= 0) {
+        statusDiv.textContent = "🚫 Veuillez entrer un nombre valide après +dés.";
+        statusDiv.className = "status error";
+        return;
+      }
+
+      let diceRolls = [];
+      for (let i = 0; i < numDices; i++) {
+        // Génère un nombre aléatoire entre 1 et 6 inclus
+        diceRolls.push(Math.floor(Math.random() * 6) + 1); // Modifié pour garantir une vraie randomisation
+      }
+
+      message = `+dés : ${diceRolls.join(', ')}`;
+      sendToDiscord(message, username, avatarURL, statusDiv);
+      return;
+    }
+
+    // Si le message ne contient pas +ip, +time, +help ou +dés, on l'envoie directement
+    sendToDiscord(message, username, avatarURL, statusDiv);
+  }
+
+  function sendToDiscord(message, username, avatarURL, statusDiv) {
     const payload = {
       username: username,
       content: message
