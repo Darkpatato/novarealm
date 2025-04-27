@@ -80,6 +80,7 @@
 <div class="card">
   <h1>💬 Discord Webhook</h1>
   <input type="text" id="username" placeholder="Nom d'utilisateur (optionnel)">
+  <input type="text" id="avatar" placeholder="URL de l'image pour la photo de profil (optionnel)">
   <textarea id="message" placeholder="Écris ton message..."></textarea>
   <button onclick="sendMessage()">Envoyer</button>
   <div class="status" id="status"></div>
@@ -91,6 +92,7 @@
   function sendMessage() {
     const message = document.getElementById('message').value.trim();
     const username = document.getElementById('username').value.trim() || "WebApp";
+    const avatarURL = document.getElementById('avatar').value.trim();
     const statusDiv = document.getElementById('status');
 
     if (!message) {
@@ -99,21 +101,28 @@
       return;
     }
 
+    const payload = {
+      username: username,
+      content: message
+    };
+
+    if (avatarURL) {
+      payload.avatar_url = avatarURL;
+    }
+
     fetch(webhookURL, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({
-        username: username,
-        content: message
-      })
+      body: JSON.stringify(payload)
     })
     .then(response => {
       if (response.ok) {
         statusDiv.textContent = "✅ Message envoyé avec succès !";
         statusDiv.className = "status success";
         document.getElementById('message').value = "";
+        document.getElementById('avatar').value = "";
       } else {
         statusDiv.textContent = "🚫 Erreur lors de l'envoi du message.";
         statusDiv.className = "status error";
